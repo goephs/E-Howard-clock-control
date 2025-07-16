@@ -72,6 +72,12 @@
     const countdownDiv = document.getElementById('countdown');
     const clockDiv = document.getElementById('clock');
 
+
+	  let countdownInterval = null;
+	  let blinkInterval = null;
+	  let countdownActive = false;
+
+
     client.on('connect', () => {
       console.log('Connected to HiveMQ Cloud');
       statusDiv.textContent = 'Connected to HiveMQ Cloud';
@@ -83,47 +89,66 @@
     });
 
     // Button Actions
-    function sendMinPlus() {
-      client.publish('ehoward-clock/control/minPlus', '1');
-      feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
-      setTimeout(() => {
-        feedbackDiv.textContent = '';
-      }, 2000);
-    }
+	 function sendMinPlus() {
+		if (countdownActive) {
+		  stopCountdown(); // interrupt countdown
+		  client.publish('ehoward-clock/control/minMinus', '0');
+		  console.log('Countdown interrupted. Sent reset signal.');
+		}
 
-    function sendMinMinus() {
+		client.publish('ehoward-clock/control/minPlus', '1');
+		feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+		setTimeout(() => {
+		  feedbackDiv.textContent = '';
+		}, 2000);
+	  }
+
+
+
+  function sendMinMinus() {
+    if (!countdownActive) {
       client.publish('ehoward-clock/control/minMinus', '1');
       startCountdown(60);
-      client.publish('ehoward-clock/control/minMinus', '0');
     }
+  }
 
-	function startCountdown(seconds) {
-	  let remaining = seconds;
-	  countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+  function startCountdown(seconds) {
+    let remaining = seconds;
+    countdownActive = true;
+    countdownDiv.textContent = `Waiting ${remaining} seconds...`;
 
-	  const countdownInterval = setInterval(() => {
-		remaining--;
-		if (remaining > 0) {
-		  countdownDiv.textContent = `Waiting ${remaining} seconds...`;
-		} else {
-		  countdownDiv.textContent = '';
-		  clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+      remaining--;
+      if (remaining > 0) {
+        countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+      } else {
+        stopCountdown();
+        client.publish('ehoward-clock/control/minMinus', '0');
+        console.log('Countdown complete. Sent reset signal.');
+      }
+    }, 1000);
 
-		  // Send reset signal to Wemos
-		  client.publish('ehoward-clock/control/minMinus', '0');
-		  console.log('Countdown complete. Sent reset signal.');
-		}
-	  }, 1000);
-	}
+    blinkInterval = setInterval(() => {
+      countdownDiv.style.visibility = (countdownDiv.style.visibility === 'hidden') ? 'visible' : 'hidden';
+    }, 500);
+  }
 
-	// Real-Time Clock
-	function updateClock() {
-	  const now = new Date();
-	  const timeStr = now.toLocaleTimeString();
-	  clockDiv.textContent = `Current Time: ${timeStr}`;
-	}
-    setInterval(updateClock, 1000);
-    updateClock(); // initial call
-  </script>
+  function stopCountdown() {
+    clearInterval(countdownInterval);
+    clearInterval(blinkInterval);
+    countdownDiv.textContent = '';
+    countdownDiv.style.visibility = 'visible';
+    countdownActive = false;
+  }
+
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    clockDiv.textContent = `Current Time: ${timeStr}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock(); // initial call
+</script>
+
 </body>
 </html>
