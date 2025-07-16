@@ -28,49 +28,97 @@
     button:hover {
       background-color: #0056b3;
     }
-    #status {
-      margin-top: 2em;
+    #status, #feedback, #countdown, #clock {
+      margin-top: 1.5em;
       font-weight: bold;
+      font-size: 1.2em;
+    }
+    #feedback {
       color: green;
+    }
+    #countdown {
+      color: orange;
+    }
+    #clock {
+      color: #333;
     }
   </style>
 </head>
 <body>
   <h1>E Howard Clock Control Panel</h1>
-  <button onclick="sendCommand('ehoward-clock/control/minPlus')">Minute Plus</button>
-  <button onclick="sendCommand('ehoward-clock/control/minMinus')">Minute Minus</button>
+  <div id="clock">Loading time...</div>
+  <button onclick="sendMinPlus()">Minute Plus</button>
+  <button onclick="sendMinMinus()">Minute Minus</button>
 
   <div id="status">Connecting to HiveMQ Cloud...</div>
+  <div id="feedback"></div>
+  <div id="countdown"></div>
 
   <script>
+    // MQTT Setup
     const options = {
       connectTimeout: 4000,
       clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
-      username: 'goephs',       // ?? Replace with your HiveMQ Cloud username
-      password: '58Horseshoe!',       // ?? Replace with your HiveMQ Cloud password
+      username: 'goephs',       // Replace with your HiveMQ Cloud username
+      password: '58Horseshoe!',       // Replace with your HiveMQ Cloud password
       keepalive: 60,
       clean: true,
     };
 
-    const client = mqtt.connect('wss://28c9d9d3a1bf41a69b7cd4fe3814859c.s1.eu.hivemq.cloud:8884/mqtt', options); // ?? Replace with your HiveMQ Cloud instance
+    const client = mqtt.connect('wss://28c9d9d3a1bf41a69b7cd4fe3814859c.s1.eu.hivemq.cloud:8884/mqtt', options); // Replace with your HiveMQ Cloud instance
 
     const statusDiv = document.getElementById('status');
+    const feedbackDiv = document.getElementById('feedback');
+    const countdownDiv = document.getElementById('countdown');
+    const clockDiv = document.getElementById('clock');
 
     client.on('connect', () => {
-      console.log('? Connected to HiveMQ Cloud');
+      console.log('Connected to HiveMQ Cloud');
       statusDiv.textContent = 'Connected to HiveMQ Cloud';
     });
 
     client.on('error', (err) => {
       console.error('Connection error: ', err);
-      statusDiv.textContent = '? Connection error';
+      statusDiv.textContent = 'X Connection error';
     });
 
-    function sendCommand(topic) {
-      client.publish(topic, '1');
-      console.log('Published to ' + topic);
-      statusDiv.textContent = `?? Sent command to ${topic}`;
+    // Button Actions
+    function sendMinPlus() {
+      client.publish('ehoward-clock/control/minPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
     }
+
+    function sendMinMinus() {
+      client.publish('ehoward-clock/control/minMinus', '1');
+      startCountdown(60);
+    }
+
+    // Countdown Timer
+    function startCountdown(seconds) {
+      let remaining = seconds;
+      countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+      const interval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+        } else {
+          countdownDiv.textContent = '';
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
+
+    // Real-Time Clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+      clockDiv.textContent = `Current Time: ${timeStr}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock(); // initial call
   </script>
 </body>
 </html>
