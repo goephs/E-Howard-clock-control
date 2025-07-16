@@ -94,29 +94,34 @@
     function sendMinMinus() {
       client.publish('ehoward-clock/control/minMinus', '1');
       startCountdown(60);
+      client.publish('ehoward-clock/control/minMinus', '0');
     }
 
-    // Countdown Timer
-    function startCountdown(seconds) {
-      let remaining = seconds;
-      countdownDiv.textContent = `Waiting ${remaining} seconds...`;
-      const interval = setInterval(() => {
-        remaining--;
-        if (remaining > 0) {
-          countdownDiv.textContent = `Waiting ${remaining} seconds...`;
-        } else {
-          countdownDiv.textContent = '';
-          clearInterval(interval);
-        }
-      }, 1000);
-    }
+	function startCountdown(seconds) {
+	  let remaining = seconds;
+	  countdownDiv.textContent = `Waiting ${remaining} seconds...`;
 
-    // Real-Time Clock
-    function updateClock() {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString();
-      clockDiv.textContent = `Current Time: ${timeStr}`;
-    }
+	  const countdownInterval = setInterval(() => {
+		remaining--;
+		if (remaining > 0) {
+		  countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+		} else {
+		  countdownDiv.textContent = '';
+		  clearInterval(countdownInterval);
+
+		  // Send reset signal to Wemos
+		  client.publish('ehoward-clock/control/minMinus', '0');
+		  console.log('Countdown complete. Sent reset signal.');
+		}
+	  }, 1000);
+	}
+
+	// Real-Time Clock
+	function updateClock() {
+	  const now = new Date();
+	  const timeStr = now.toLocaleTimeString();
+	  clockDiv.textContent = `Current Time: ${timeStr}`;
+	}
     setInterval(updateClock, 1000);
     updateClock(); // initial call
   </script>
