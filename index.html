@@ -36,7 +36,7 @@
   </style>
 </head>
 <body>
-  <h1>??? Clock Control Panel</h1>
+  <h1>E Howard Clock Control Panel</h1>
   <button onclick="sendCommand('ehoward-clock/control/minPlus')">Minute Plus</button>
   <button onclick="sendCommand('ehoward-clock/control/minMinus')">Minute Minus</button>
 
@@ -58,7 +58,7 @@
 
     client.on('connect', () => {
       console.log('? Connected to HiveMQ Cloud');
-      statusDiv.textContent = '? Connected to HiveMQ Cloud';
+      statusDiv.textContent = 'Connected to HiveMQ Cloud';
     });
 
     client.on('error', (err) => {
