@@ -247,10 +247,16 @@ function stopCountdown() {
   countdownActive = false;
   countdownType = null;
 
-  document.getElementById('progressBar').style.width = '0%';
-  document.getElementById('progressBar').style.backgroundColor = 'green';
+  const progressBar = document.getElementById('progressBar');
+  const progressContainer = document.getElementById('progressContainer');
+  const countdownLabel = document.getElementById('countdownLabel');
+  const cancelButton = document.getElementById('cancelButton');
+
+  progressBar.style.width = '0%';
+  progressBar.style.backgroundColor = 'green';
   countdownLabel.textContent = '';
-  document.getElementById('cancelButton').style.display = 'inline-block';
+  cancelButton.style.display = 'none';
+  progressContainer.style.display = 'none'; //Hide the container
 }
 
   function cancelCountdown() {
