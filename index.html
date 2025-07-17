@@ -198,6 +198,7 @@ function startCountdown(seconds) {
   countdownActive = true;
   countdownType = countdownType || "minute"; // fallback
   document.getElementById('cancelButton').style.display = 'inline-block';
+  document.getElementById('progressContainer').style.display = 'block';
   updateCountdownDisplay(remaining, total);
 
   countdownInterval = setInterval(() => {
