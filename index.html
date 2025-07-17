@@ -1,3 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clock Control Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2em;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 1em 2em;
+      margin: 1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #status, #feedback, #countdown, #clock {
+      margin-top: 1.5em;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    #feedback {
+      color: green;
+    }
+    #countdown {
+      color: orange;
+    }
+    #clock {
+      color: #333;
+    }
+
+#progressContainer {
+  width: 80%;
+  height: 20px;
+  background-color: #ddd;
+  border-radius: 10px;
+  margin: 1em auto;
+  overflow: hidden;
+}
+
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background-color: green;
+  transition: width 1s linear, background-color 1s linear;
+}
+
+#countdownLabel {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #333;
+  margin-top: 0.5em;
+}
+
+#cancelButton {
+  margin-top: 1em;
+  padding: 0.5em 1.5em;
+  font-size: 1em;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#cancelButton:hover {
+  background-color: #c82333;
+}
+  </style>
+</head>
+<body>
+  <h1>E Howard Clock Control Panel</h1>
+  <div id="clock">Loading time...</div>
+  <button onclick="sendMinPlus()">Minute Plus</button>
+  <button onclick="sendMinMinus()">Minute Minus</button>
+  <button onclick="sendHourPlus()">Hour Plus</button>
+  <button onclick="sendHourMinus()">Hour Minus</button>
+
+  <div id="status">Connecting to HiveMQ Cloud...</div>
+  <div id="feedback"></div>
+  <div id="countdown"></div>
+
+<div id="progressContainer">
+  <div id="progressBar"></div>
+</div>
+<div id="countdownLabel"></div>
+<button id="cancelButton" onclick="cancelCountdown()" style="display:none;">Cancel</button>
+
+  <script>
+    // MQTT Setup
+    const options = {
+      connectTimeout: 4000,
+      clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
+      username: 'goephs',       // Replace with your HiveMQ Cloud username
+      password: '58Horseshoe!',       // Replace with your HiveMQ Cloud password
+      keepalive: 60,
+      clean: true,
+    };
+
+    const client = mqtt.connect('wss://28c9d9d3a1bf41a69b7cd4fe3814859c.s1.eu.hivemq.cloud:8884/mqtt', options); // Replace with your HiveMQ Cloud instance
+
+    const statusDiv = document.getElementById('status');
+    const feedbackDiv = document.getElementById('feedback');
+    const countdownDiv = document.getElementById('countdown');
+    const clockDiv = document.getElementById('clock');
+
+
+  let countdownInterval = null;
+  let blinkInterval = null;
+  let countdownActive = false;
+  let countdownType = null; // "minute" or "hour"
+
+
+
+    client.on('connect', () => {
+      console.log('Connected to HiveMQ Cloud');
+      statusDiv.textContent = 'Connected to HiveMQ Cloud';
+    });
+
+    client.on('error', (err) => {
+      console.error('Connection error: ', err);
+      statusDiv.textContent = 'X Connection error';
+    });
+
+    // Button Actions
+
+  function sendMinPlus() {
+    if (countdownActive) {
+      cancelCountdown();
+      feedbackDiv.textContent = 'Wait Time Interrupted';
+      setTimeout(() => {
+        feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+        }, 2000);
+      }, 1500);
+    } else {
+      client.publish('ehoward-clock/control/minPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }
+  }
+
+  function sendMinMinus() {
+    if (!countdownActive) {
+      countdownType = "minute";
+      client.publish('ehoward-clock/control/minMinus', '1');
+      startCountdown(60);
+    }
+  }
+
+  function sendHourPlus() {
+    if (countdownActive) {
+      cancelCountdown();
+      feedbackDiv.textContent = 'Wait Time Interrupted';
+      setTimeout(() => {
+        feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+        }, 2000);
+      }, 1500);
+    } else {
+      client.publish('ehoward-clock/control/hourPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }
+  }
+
+  function sendHourMinus() {
+    if (!countdownActive) {
+      countdownType = "hour";
+      client.publish('ehoward-clock/control/hourMinus', '1');
+      startCountdown(3600);
+    }
+  }
+
+function startCountdown(seconds) {
+  let remaining = seconds;
+  const total = seconds;
+  countdownActive = true;
+  countdownType = countdownType || "minute"; // fallback
+  document.getElementById('cancelButton').style.display = 'inline-block';
+  updateCountdownDisplay(remaining, total);
+
+  countdownInterval = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      updateCountdownDisplay(remaining, total);
+    } else {
+      stopCountdown();
+      publishReset();
+      console.log('Countdown complete. Sent reset signal.');
+    }
+  }, 1000);
+}
+
 function updateCountdownDisplay(seconds, total) {
   const percent = ((total - seconds) / total) * 100;
   const progressBar = document.getElementById('progressBar');
@@ -24,3 +237,47 @@ function updateCountdownDisplay(seconds, total) {
     countdownLabel.textContent = `Waiting ${seconds} seconds...`;
   }
 }
+
+  // Update countdown label
+  const countdownLabel = document.getElementById('countdownLabel');
+  if (countdownType === "hour") {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    countdownLabel.textContent = `Waiting ${mins}:${secs.toString().padStart(2, '0')}...`;
+  } else {
+    countdownLabel.textContent = `Waiting ${seconds} seconds...`;
+  }
+}
+
+function stopCountdown() {
+  clearInterval(countdownInterval);
+  countdownInterval = null;
+  countdownActive = false;
+  countdownType = null;
+
+  document.getElementById('progressBar').style.width = '0%';
+  countdownLabel.textContent = '';
+}
+
+  function cancelCountdown() {
+    stopCountdown();
+    if (countdownType === "minute") {
+      client.publish('ehoward-clock/control/minMinus', '0');
+    } else if (countdownType === "hour") {
+      client.publish('ehoward-clock/control/hourMinus', '0');
+    }
+    console.log('Countdown canceled. Sent reset signal.');
+  }
+
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    clockDiv.textContent = `Current Time: ${timeStr}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock(); // initial call
+</script>
+
+
+</body>
+</html>
