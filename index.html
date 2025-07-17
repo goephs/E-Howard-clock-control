@@ -42,6 +42,29 @@
     #clock {
       color: #333;
     }
+
+    #progressContainer {
+	  width: 80%;
+	  height: 20px;
+	  background-color: #ddd;
+	  border-radius: 10px;
+	  margin: 1em auto;
+	  overflow: hidden;
+	}
+
+	#progressBar {
+	  height: 100%;
+	  width: 0%;
+	  background-color: #007bff;
+	  transition: width 1s linear;
+	}
+
+	#countdownLabel {
+	  font-weight: bold;
+	  font-size: 1.2em;
+	  color: #333;
+	  margin-top: 0.5em;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +78,11 @@
   <div id="status">Connecting to HiveMQ Cloud...</div>
   <div id="feedback"></div>
   <div id="countdown"></div>
+
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+  </div>
+  <div id="countdownLabel"></div>
 
   <script>
     // MQTT Setup
@@ -148,52 +176,50 @@
     }
   }
 
-  function startCountdown(seconds) {
-    let remaining = seconds;
-    countdownActive = true;
-    updateCountdownDisplay(remaining);
+function startCountdown(seconds) {
+  let remaining = seconds;
+  const total = seconds;
+  countdownActive = true;
+  updateCountdownDisplay(remaining, total);
 
-    countdownInterval = setInterval(() => {
-      remaining--;
-      if (remaining > 0) {
-        updateCountdownDisplay(remaining);
-      } else {
-        stopCountdown();
-        if (countdownType === "minute") {
-          client.publish('ehoward-clock/control/minMinus', '0');
-        } else if (countdownType === "hour") {
-          client.publish('ehoward-clock/control/hourMinus', '0');
-        }
-        console.log('Countdown complete. Sent reset signal.');
-      }
-    }, 1000);
-
-    blinkInterval = setInterval(() => {
-      countdownDiv.style.visibility = (countdownDiv.style.visibility === 'hidden') ? 'visible' : 'hidden';
-    }, 500);
-  }
-
-  function updateCountdownDisplay(seconds) {
-    if (countdownType === "hour") {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      countdownDiv.textContent = `Waiting ${mins}:${secs.toString().padStart(2, '0')}...`;
+  countdownInterval = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      updateCountdownDisplay(remaining, total);
     } else {
-      countdownDiv.textContent = `Waiting ${seconds} seconds...`;
+      stopCountdown();
+      if (countdownType === "minute") {
+        client.publish('ehoward-clock/control/minMinus', '0');
+      } else if (countdownType === "hour") {
+        client.publish('ehoward-clock/control/hourMinus', '0');
+      }
+      console.log('Countdown complete. Sent reset signal.');
     }
-    countdownDiv.style.visibility = 'visible';
-  }
+  }, 1000);
+}
 
-  function stopCountdown() {
-    clearInterval(countdownInterval);
-    clearInterval(blinkInterval);
-    countdownInterval = null;
-    blinkInterval = null;
-    countdownActive = false;
-    countdownType = null;
-    countdownDiv.textContent = '';
-    countdownDiv.style.visibility = 'visible';
+function updateCountdownDisplay(seconds, total) {
+  const percent = ((total - seconds) / total) * 100;
+  document.getElementById('progressBar').style.width = `${percent}%`;
+
+  if (countdownType === "hour") {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    countdownLabel.textContent = `Waiting ${mins}:${secs.toString().padStart(2, '0')}...`;
+  } else {
+    countdownLabel.textContent = `Waiting ${seconds} seconds...`;
   }
+}
+
+function stopCountdown() {
+  clearInterval(countdownInterval);
+  countdownInterval = null;
+  countdownActive = false;
+  countdownType = null;
+
+  document.getElementById('progressBar').style.width = '0%';
+  countdownLabel.textContent = '';
+}
 
   function cancelCountdown() {
     stopCountdown();
