@@ -73,9 +73,11 @@
     const clockDiv = document.getElementById('clock');
 
 
-	  let countdownInterval = null;
-	  let blinkInterval = null;
-	  let countdownActive = false;
+  let countdownInterval = null;
+  let blinkInterval = null;
+  let countdownActive = false;
+  let countdownType = null; // "minute" or "hour"
+
 
 
     client.on('connect', () => {
@@ -89,41 +91,77 @@
     });
 
     // Button Actions
-	 function sendMinPlus() {
-		if (countdownActive) {
-		  stopCountdown(); // interrupt countdown
-		  client.publish('ehoward-clock/control/minMinus', '0');
-		  console.log('Countdown interrupted. Sent reset signal.');
-		}
 
-		client.publish('ehoward-clock/control/minPlus', '1');
-		feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
-		setTimeout(() => {
-		  feedbackDiv.textContent = '';
-		}, 2000);
-	  }
-
-
+  function sendMinPlus() {
+    if (countdownActive) {
+      cancelCountdown();
+      feedbackDiv.textContent = 'Wait Time Interrupted';
+      setTimeout(() => {
+        feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+        }, 2000);
+      }, 1500);
+    } else {
+      client.publish('ehoward-clock/control/minPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }
+  }
 
   function sendMinMinus() {
     if (!countdownActive) {
+      countdownType = "minute";
       client.publish('ehoward-clock/control/minMinus', '1');
       startCountdown(60);
+    }
+  }
+
+  function sendHourPlus() {
+    if (countdownActive) {
+      cancelCountdown();
+      feedbackDiv.textContent = 'Wait Time Interrupted';
+      setTimeout(() => {
+        feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+        }, 2000);
+      }, 1500);
+    } else {
+      client.publish('ehoward-clock/control/hourPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }
+  }
+
+  function sendHourMinus() {
+    if (!countdownActive) {
+      countdownType = "hour";
+      client.publish('ehoward-clock/control/hourMinus', '1');
+      startCountdown(3600);
     }
   }
 
   function startCountdown(seconds) {
     let remaining = seconds;
     countdownActive = true;
-    countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+    updateCountdownDisplay(remaining);
 
     countdownInterval = setInterval(() => {
       remaining--;
       if (remaining > 0) {
-        countdownDiv.textContent = `Waiting ${remaining} seconds...`;
+        updateCountdownDisplay(remaining);
       } else {
         stopCountdown();
-        client.publish('ehoward-clock/control/minMinus', '0');
+        if (countdownType === "minute") {
+          client.publish('ehoward-clock/control/minMinus', '0');
+        } else if (countdownType === "hour") {
+          client.publish('ehoward-clock/control/hourMinus', '0');
+        }
         console.log('Countdown complete. Sent reset signal.');
       }
     }, 1000);
@@ -133,12 +171,36 @@
     }, 500);
   }
 
+  function updateCountdownDisplay(seconds) {
+    if (countdownType === "hour") {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      countdownDiv.textContent = `Waiting ${mins}:${secs.toString().padStart(2, '0')}...`;
+    } else {
+      countdownDiv.textContent = `Waiting ${seconds} seconds...`;
+    }
+    countdownDiv.style.visibility = 'visible';
+  }
+
   function stopCountdown() {
     clearInterval(countdownInterval);
     clearInterval(blinkInterval);
+    countdownInterval = null;
+    blinkInterval = null;
+    countdownActive = false;
+    countdownType = null;
     countdownDiv.textContent = '';
     countdownDiv.style.visibility = 'visible';
-    countdownActive = false;
+  }
+
+  function cancelCountdown() {
+    stopCountdown();
+    if (countdownType === "minute") {
+      client.publish('ehoward-clock/control/minMinus', '0');
+    } else if (countdownType === "hour") {
+      client.publish('ehoward-clock/control/hourMinus', '0');
+    }
+    console.log('Countdown canceled. Sent reset signal.');
   }
 
   function updateClock() {
@@ -149,6 +211,7 @@
   setInterval(updateClock, 1000);
   updateClock(); // initial call
 </script>
+
 
 </body>
 </html>
