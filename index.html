@@ -212,7 +212,13 @@ function startCountdown(seconds) {
     }
   }, 1000);
 }
-
+function publishReset() {
+  if (countdownType === "minute") {
+    client.publish('ehoward-clock/control/minMinus', '0');
+  } else if (countdownType === "hour") {
+    client.publish('ehoward-clock/control/hourMinus', '0');
+  }
+}
 function updateCountdownDisplay(seconds, total) {
   const percent = ((total - seconds) / total) * 100;
   const progressBar = document.getElementById('progressBar');
@@ -274,6 +280,8 @@ function stopCountdown() {
     const timeStr = now.toLocaleTimeString();
     clockDiv.textContent = `Current Time: ${timeStr}`;
   }
+
+
   setInterval(updateClock, 1000);
   updateClock(); // initial call
 </script>
