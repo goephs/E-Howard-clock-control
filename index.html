@@ -287,16 +287,16 @@ function drawAnalogCountdown(mins, secs) {
     ctx.stroke();
   }
 
-  // Minute hand (based on remaining time)
-  const minuteAngle = ((-mins * 6 - 90) * Math.PI) / 180;
-  const mx = centerX + 65 * Math.cos(minuteAngle);
-  const my = centerY + 65 * Math.sin(minuteAngle);
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY);
-  ctx.lineTo(mx, my);
-  ctx.strokeStyle = "#222";
-  ctx.lineWidth = 4;
-  ctx.stroke();
+// Minute hand (countdown rotation: counterclockwise from 60 to 0)
+const minuteAngle = ((270 + mins * 6) * Math.PI) / 180;
+const mx = centerX + 65 * Math.cos(minuteAngle);
+const my = centerY + 65 * Math.sin(minuteAngle);
+ctx.beginPath();
+ctx.moveTo(centerX, centerY);
+ctx.lineTo(mx, my);
+ctx.strokeStyle = "#222";
+ctx.lineWidth = 4;
+ctx.stroke();
 
   // Mondaine-style pause for second hand
   let drawSecs = secs;
