@@ -185,19 +185,17 @@ function sendHourPlus() {
     const cancelButton = document.getElementById('cancelButton');
 
     progressContainer.style.display = 'block';
-    cancelButton.style.display = 'none'; // no cancel
-    countdownLabel.textContent = 'Moving clock forward 1 hour…';
-
-    let elapsed = 0;
-    const total = 37.2; // seconds
-    const interval = 1000;
-
+    cancelButton.style.display = 'none';
     progressBar.style.width = '0%';
     progressBar.style.backgroundColor = 'green';
 
+    const total = 37.2; // seconds
+    let remaining = total;
+    const interval = 1000;
+
     const hourPlusInterval = setInterval(() => {
-      elapsed += interval / 1000;
-      const percent = (elapsed / total) * 100;
+      remaining -= interval / 1000;
+      const percent = ((total - remaining) / total) * 100;
       progressBar.style.width = `${Math.min(percent, 100)}%`;
 
       // Color shift
@@ -209,7 +207,12 @@ function sendHourPlus() {
         progressBar.style.backgroundColor = 'red';
       }
 
-      if (elapsed >= total) {
+      // Show time remaining
+      const mins = Math.floor(remaining / 60);
+      const secs = Math.ceil(remaining % 60);
+      countdownLabel.textContent = `Time Remaining: ${mins}:${secs.toString().padStart(2, '0')}`;
+
+      if (remaining <= 0) {
         clearInterval(hourPlusInterval);
         progressBar.style.width = '0%';
         progressBar.style.backgroundColor = 'green';
