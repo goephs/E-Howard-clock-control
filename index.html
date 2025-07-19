@@ -241,81 +241,32 @@ function sendHourPlus() {
     }
   }
 
-function drawAnalogCountdown(mins, secs) {
-  const canvas = document.getElementById("analogClock");
-  const ctx = canvas.getContext("2d");
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = 100;
+const isPaused = secs === 59;  // pause at top before rolling to next minute
+let drawSecs = secs;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Outer dial
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-  ctx.strokeStyle = "#333";
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  // Draw 60-minute numerals every 5 minutes
-  ctx.font = "14px serif";
-  ctx.fillStyle = "#222";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i < 12; i++) {
-    const label = 60 - i * 5;
-    const angle = ((i * 30 - 90) * Math.PI) / 180;
-    const x = centerX + 75 * Math.cos(angle);
-    const y = centerY + 75 * Math.sin(angle);
-    ctx.fillText(label.toString(), x, y);
-  }
-
-  // Minute tick marks
-  for (let i = 0; i < 60; i++) {
-    const angle = (i * 6 * Math.PI) / 180;
-    const inner = radius - (i % 5 === 0 ? 10 : 5);
-    const x1 = centerX + inner * Math.cos(angle);
-    const y1 = centerY + inner * Math.sin(angle);
-    const x2 = centerX + radius * Math.cos(angle);
-    const y2 = centerY + radius * Math.sin(angle);
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = "#666";
-    ctx.lineWidth = i % 5 === 0 ? 2 : 1;
-    ctx.stroke();
-  }
-
-  // Minute hand (countdown from 60 to 0)
-  const totalSecondsRemaining = mins * 60 + secs;
-  const angle = ((360 * (totalSecondsRemaining / 3600)) - 90) * Math.PI / 180;
-  const mx = centerX + 65 * Math.cos(angle);
-  const my = centerY + 65 * Math.sin(angle);
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY);
-  ctx.lineTo(mx, my);
-  ctx.strokeStyle = "#222";
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  // Second hand (sweeps every second)
-  const secondAngle = ((secs * 6) - 90) * Math.PI / 180;
-  const sx = centerX + 85 * Math.cos(secondAngle);
-  const sy = centerY + 85 * Math.sin(secondAngle);
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY);
-  ctx.lineTo(sx, sy);
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Center cap
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
-  ctx.fillStyle = "#444";
-  ctx.fill();
+// Optional 2-second pause simulation:
+if (secs === 59 || secs === 0) {
+  drawSecs = 60; // keep the hand at 12 o’clock
 }
 
+// Second hand angle (sweeps clockwise)
+const secondAngle = ((drawSecs * 6 - 90) * Math.PI) / 180;
+const sx = centerX + 85 * Math.cos(secondAngle);
+const sy = centerY + 85 * Math.sin(secondAngle);
+
+// Second hand line
+ctx.beginPath();
+ctx.moveTo(centerX, centerY);
+ctx.lineTo(sx, sy);
+ctx.strokeStyle = "red";
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Red dot at tip (Swiss style)
+ctx.beginPath();
+ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
+ctx.fillStyle = "red";
+ctx.fill();
 function startCountdown(seconds) {
   let remaining = seconds;
   const total = seconds;
