@@ -287,8 +287,8 @@ function drawAnalogCountdown(mins, secs) {
   }
 
 // Minute hand — starts at top, moves counterclockwise each full minute
-const elapsedMinutes = 60 - mins;
-const angleMinutes = ((-elapsedMinutes * 6 - 90) * Math.PI) / 180;
+const fullMinutesPassed = Math.floor((60 * 60 - (mins * 60 + secs)) / 60);
+const angleMinutes = ((-fullMinutesPassed * 6 - 90) * Math.PI) / 180;
 const mx = centerX + 65 * Math.cos(angleMinutes);
 const my = centerY + 65 * Math.sin(angleMinutes);
 ctx.beginPath();
