@@ -165,24 +165,30 @@
     }
   }
 
-  function sendHourPlus() {
-    if (countdownActive) {
-      cancelCountdown();
-      feedbackDiv.textContent = 'Wait Time Interrupted';
-      setTimeout(() => {
-        feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
-        setTimeout(() => {
-          feedbackDiv.textContent = '';
-        }, 2000);
-      }, 1500);
-    } else {
-      client.publish('ehoward-clock/control/hourPlus', '1');
-      feedbackDiv.textContent = 'Clock Ticked Forward 1 hour';
+function sendHourPlus() {
+  if (countdownActive) {
+    cancelCountdown();
+    feedbackDiv.textContent = '⏹️ Wait Time Interrupted';
+    setTimeout(() => {
+      feedbackDiv.textContent = '🕐 Hour Plus Sent';
       setTimeout(() => {
         feedbackDiv.textContent = '';
       }, 2000);
-    }
+    }, 1500);
+  } else {
+    feedbackDiv.textContent = '🕐 Hour Plus in Progress';
+    client.publish('ehoward-clock/control/hourPlus', '1');
+
+    setTimeout(() => {
+      feedbackDiv.textContent = '✅ Hour Plus Completed';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }, 30000); // Adjust this if you want a longer simulation
+               // each fwd tick is 600 ms so it will do 60 ticks
+               // in 37.2 seconds.  Stop the progress text in 30s
   }
+}
 
   function sendHourMinus() {
     if (!countdownActive) {
@@ -201,16 +207,20 @@ function startCountdown(seconds) {
   document.getElementById('progressContainer').style.display = 'block';
   updateCountdownDisplay(remaining, total);
 
-  countdownInterval = setInterval(() => {
-    remaining--;
-    if (remaining > 0) {
-      updateCountdownDisplay(remaining, total);
-    } else {
-      stopCountdown();
-      publishReset();
-      console.log('Countdown complete. Sent reset signal.');
-    }
-  }, 1000);
+countdownInterval = setInterval(() => {
+  remaining--;
+  if (remaining > 0) {
+    updateCountdownDisplay(remaining, total);
+  } else {
+    stopCountdown();
+    publishReset();
+
+    feedbackDiv.textContent = '✅ Countdown Complete';
+    setTimeout(() => {
+      feedbackDiv.textContent = '';
+    }, 2000);
+  }
+}, 1000);
 }
 function publishReset() {
   if (countdownType === "minute") {
@@ -226,7 +236,7 @@ function updateCountdownDisplay(seconds, total) {
   // Update progress bar width
   progressBar.style.width = `${percent}%`;
 
-  // Animate color from green → orange → red
+  // Animate color from green ? orange ? red
   if (percent < 50) {
     progressBar.style.backgroundColor = 'green';
   } else if (percent < 80) {
