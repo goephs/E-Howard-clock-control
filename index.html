@@ -6,12 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 2em;
-      background-color: #f4f4f4;
-    }
+body {
+  font-size: 14px;
+  margin: 0;
+  padding: 0 1em;
+}
+#countdownLabel,
+#analogCountdownText {
+  font-size: 1em;
+  text-align: center;
+  margin-top: 0.5em;
+}
     h1 {
       color: #333;
     }
@@ -46,19 +51,15 @@
 .buttonGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1em;
-  margin: 1.5em auto;
-  max-width: 400px;
+  gap: 0.75em;
+  margin: 1em auto;
+  max-width: 340px;
 }
 
 .buttonGrid button {
-  font-size: 1em;
-  padding: 1em;
-  border: none;
-  border-radius: 8px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
+  font-size: 0.85em;
+  padding: 0.75em;
+  border-radius: 6px;
 }
 
 .buttonGrid button:hover {
@@ -125,7 +126,7 @@
 <button id="cancelButton" onclick="cancelCountdown()" style="display:none;">Cancel</button>
 
 <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-  <canvas id="analogClock" width="250" height="250" style="display:none;"></canvas>
+  <canvas id="analogClock" width="200" height="200" style="display:none;"></canvas>
   <div id="analogCountdownText" style="margin-top: 0.5em; font-weight: bold; font-size: 1.2em;"></div>
 </div>
 
@@ -270,7 +271,7 @@ function drawAnalogCountdown(mins, secs) {
   const ctx = canvas.getContext("2d");
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const radius = 100;
+  const radius = 85;  // scale down from 100
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
