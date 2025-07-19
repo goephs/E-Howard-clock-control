@@ -238,6 +238,7 @@ function sendHourPlus() {
       startCountdown(3600);
     }
   }
+
   function drawAnalogCountdown(minutes, seconds) {
     const canvas = document.getElementById("analogClock");
     const ctx = canvas.getContext("2d");
@@ -297,6 +298,13 @@ countdownInterval = setInterval(() => {
   remaining--;
   if (remaining > 0) {
     updateCountdownDisplay(remaining, total);
+    if (countdownType === "hour") {
+	  const mins = Math.floor(remaining / 60);
+	  const secs = remaining % 60;
+
+	  drawAnalogCountdown(mins, secs);
+	  document.getElementById("analogCountdownText").textContent = `Time Remaining: ${mins}:${secs.toString().padStart(2, '0')}`;
+}
   } else {
     stopCountdown();
     publishReset();
@@ -319,14 +327,6 @@ function publishReset() {
 function updateCountdownDisplay(seconds, total) {
   const percent = ((total - seconds) / total) * 100;
   const progressBar = document.getElementById('progressBar');
-
-  if (countdownType === "hour") {
-    const mins = Math.floor(remaining / 60);
-    const secs = remaining % 60;
-
-    drawAnalogCountdown(mins, secs);
-    document.getElementById("analogCountdownText").textContent = `Time Remaining: ${mins}:${secs.toString().padStart(2, '0')}`;
-}
 
   // Update progress bar width
   progressBar.style.width = `${percent}%`;
