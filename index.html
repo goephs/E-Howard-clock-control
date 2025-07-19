@@ -43,6 +43,28 @@
       color: #333;
     }
 
+.buttonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+  margin: 1.5em auto;
+  max-width: 400px;
+}
+
+.buttonGrid button {
+  font-size: 1em;
+  padding: 1em;
+  border: none;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.buttonGrid button:hover {
+  background-color: #0056b3;
+}
+
 #progressContainer {
   display: none; /* hidden by default */
   width: 80%;
@@ -85,10 +107,12 @@
 <body>
   <h1>E Howard Clock Control Panel</h1>
   <div id="clock">Loading time...</div>
+<div class="buttonGrid">
   <button onclick="sendMinPlus()">Minute Plus</button>
   <button onclick="sendMinMinus()">Minute Minus</button>
   <button onclick="sendHourPlus()">Hour Plus</button>
   <button onclick="sendHourMinus()">Hour Minus</button>
+</div>
 
   <div id="status">Connecting to HiveMQ Cloud...</div>
   <div id="feedback"></div>
