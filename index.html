@@ -100,8 +100,10 @@
 <div id="countdownLabel"></div>
 <button id="cancelButton" onclick="cancelCountdown()" style="display:none;">Cancel</button>
 
-<canvas id="analogClock" width="200" height="200" style="display:none;"></canvas>
-<div id="analogCountdownText" style="margin-top: 0.5em; font-weight: bold; font-size: 1.2em;"></div>
+<div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+  <canvas id="analogClock" width="250" height="250" style="display:none;"></canvas>
+  <div id="analogCountdownText" style="margin-top: 0.5em; font-weight: bold; font-size: 1.2em;"></div>
+</div>
 
   <script>
     // MQTT Setup
@@ -239,45 +241,76 @@ function sendHourPlus() {
     }
   }
 
-  function drawAnalogCountdown(minutes, seconds) {
-    const canvas = document.getElementById("analogClock");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawAnalogCountdown(mins, secs) {
+  const canvas = document.getElementById("analogClock");
+  const ctx = canvas.getContext("2d");
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 100;
 
-    // Draw outer circle
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Outer bezel
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Numerals at 12, 3, 6, 9
+  ctx.fillStyle = "#222";
+  ctx.font = "16px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("12", centerX, centerY - 80);
+  ctx.fillText("3", centerX + 80, centerY);
+  ctx.fillText("6", centerX, centerY + 80);
+  ctx.fillText("9", centerX - 80, centerY);
+
+  // Minute ticks
+  for (let i = 0; i < 60; i++) {
+    const angle = (i * 6) * Math.PI / 180;
+    const inner = radius - (i % 5 === 0 ? 10 : 5);
+    const x1 = centerX + inner * Math.cos(angle);
+    const y1 = centerY + inner * Math.sin(angle);
+    const x2 = centerX + radius * Math.cos(angle);
+    const y2 = centerY + radius * Math.sin(angle);
     ctx.beginPath();
-    ctx.arc(100, 100, 90, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 4;
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = "#666";
+    ctx.lineWidth = i % 5 === 0 ? 2 : 1;
     ctx.stroke();
+  }
 
-    // Draw ticks
-    for (let i = 0; i < 60; i++) {
-      const angle = (i * 6) * Math.PI / 180;
-      const x1 = 100 + 80 * Math.cos(angle);
-      const y1 = 100 + 80 * Math.sin(angle);
-      const x2 = 100 + 90 * Math.cos(angle);
-      const y2 = 100 + 90 * Math.sin(angle);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = "#999";
-      ctx.lineWidth = (i % 5 === 0) ? 3 : 1;
-      ctx.stroke();
-    }
+  // Minute hand = total seconds into hour
+  const totalSeconds = mins * 60 + secs;
+  const minuteAngle = ((360 * (totalSeconds / 3600)) - 90) * Math.PI / 180;
+  const mx = centerX + 60 * Math.cos(minuteAngle);
+  const my = centerY + 60 * Math.sin(minuteAngle);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(mx, my);
+  ctx.strokeStyle = "#444";
+  ctx.lineWidth = 4;
+  ctx.stroke();
 
-    // Draw countdown hand
-    const totalSeconds = minutes * 60 + seconds;
-    const angle = ((360 * (totalSeconds / 3600)) - 90) * Math.PI / 180;
-    const x = 100 + 70 * Math.cos(angle);
-    const y = 100 + 70 * Math.sin(angle);
+  // Second hand
+  const secondAngle = ((secs * 6) - 90) * Math.PI / 180;
+  const sx = centerX + 85 * Math.cos(secondAngle);
+  const sy = centerY + 85 * Math.sin(secondAngle);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(sx, sy);
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(100, 100);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 4;
-    ctx.stroke();
+  // Center cap
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+  ctx.fillStyle = "#222";
+  ctx.fill();
 }
 
 function startCountdown(seconds) {
