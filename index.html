@@ -250,29 +250,30 @@ function drawAnalogCountdown(mins, secs) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Outer dial
+  // Outer bezel
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
   ctx.strokeStyle = "#333";
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Counterclockwise numerals: 60 to 5
+  // Numerals: 60 to 0 counterclockwise
   ctx.font = "14px serif";
   ctx.fillStyle = "#222";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  for (let i = 0; i < 12; i++) {
-    const label = 60 - i * 5;
-    const angle = ((90 - i * 30) * Math.PI) / 180; // CCW layout
+
+  for (let i = 0; i <= 12; i++) {
+    const label = (60 - i * 5) % 60;
+    const angle = ((-i * 30 - 90) * Math.PI) / 180; // 60 at top, counterclockwise
     const x = centerX + 75 * Math.cos(angle);
     const y = centerY + 75 * Math.sin(angle);
-    ctx.fillText(label.toString(), x, y);
+    ctx.fillText(label === 0 ? "0" : label.toString(), x, y);
   }
 
   // Tick marks
   for (let i = 0; i < 60; i++) {
-    const angle = ((90 - i * 6) * Math.PI) / 180;
+    const angle = ((-i * 6 - 90) * Math.PI) / 180;
     const inner = radius - (i % 5 === 0 ? 10 : 5);
     const x1 = centerX + inner * Math.cos(angle);
     const y1 = centerY + inner * Math.sin(angle);
@@ -286,10 +287,10 @@ function drawAnalogCountdown(mins, secs) {
     ctx.stroke();
   }
 
-  // 🕰️ Minute hand (reflects remaining time from 60 to 0)
-  const angle = ((90 - mins * 6) * Math.PI) / 180;
-  const mx = centerX + 65 * Math.cos(angle);
-  const my = centerY + 65 * Math.sin(angle);
+  // Minute hand (based on remaining time)
+  const minuteAngle = ((-mins * 6 - 90) * Math.PI) / 180;
+  const mx = centerX + 65 * Math.cos(minuteAngle);
+  const my = centerY + 65 * Math.sin(minuteAngle);
   ctx.beginPath();
   ctx.moveTo(centerX, centerY);
   ctx.lineTo(mx, my);
@@ -297,16 +298,16 @@ function drawAnalogCountdown(mins, secs) {
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // ⏱️ Second hand with Swiss-style pause
+  // Mondaine-style pause for second hand
   let drawSecs = secs;
   if (secs === 59 || secs === 0) {
-    drawSecs = 60; // simulate Mondaine pause at top
+    drawSecs = 60;
   }
   const secondAngle = ((drawSecs * 6 - 90) * Math.PI) / 180;
   const sx = centerX + 85 * Math.cos(secondAngle);
   const sy = centerY + 85 * Math.sin(secondAngle);
 
-  // Second hand line
+  // Second hand
   ctx.beginPath();
   ctx.moveTo(centerX, centerY);
   ctx.lineTo(sx, sy);
@@ -314,13 +315,13 @@ function drawAnalogCountdown(mins, secs) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 🟥 Red dot at tip
+  // Red dot tip
   ctx.beginPath();
   ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
   ctx.fillStyle = "red";
   ctx.fill();
 
-  // Center pin
+  // Center cap
   ctx.beginPath();
   ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
   ctx.fillStyle = "#444";
