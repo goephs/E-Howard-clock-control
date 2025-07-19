@@ -250,26 +250,29 @@ function drawAnalogCountdown(mins, secs) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Outer bezel
+  // Outer dial
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
   ctx.strokeStyle = "#333";
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Numerals at 12, 3, 6, 9
+  // Draw 60-minute numerals every 5 minutes
+  ctx.font = "14px serif";
   ctx.fillStyle = "#222";
-  ctx.font = "16px serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("12", centerX, centerY - 80);
-  ctx.fillText("3", centerX + 80, centerY);
-  ctx.fillText("6", centerX, centerY + 80);
-  ctx.fillText("9", centerX - 80, centerY);
+  for (let i = 0; i < 12; i++) {
+    const label = 60 - i * 5;
+    const angle = ((i * 30 - 90) * Math.PI) / 180;
+    const x = centerX + 75 * Math.cos(angle);
+    const y = centerY + 75 * Math.sin(angle);
+    ctx.fillText(label.toString(), x, y);
+  }
 
-  // Minute ticks
+  // Minute tick marks
   for (let i = 0; i < 60; i++) {
-    const angle = (i * 6) * Math.PI / 180;
+    const angle = (i * 6 * Math.PI) / 180;
     const inner = radius - (i % 5 === 0 ? 10 : 5);
     const x1 = centerX + inner * Math.cos(angle);
     const y1 = centerY + inner * Math.sin(angle);
@@ -283,19 +286,19 @@ function drawAnalogCountdown(mins, secs) {
     ctx.stroke();
   }
 
-  // Minute hand = total seconds into hour
-  const totalSeconds = mins * 60 + secs;
-  const minuteAngle = ((360 * (totalSeconds / 3600)) - 90) * Math.PI / 180;
-  const mx = centerX + 60 * Math.cos(minuteAngle);
-  const my = centerY + 60 * Math.sin(minuteAngle);
+  // Minute hand (countdown from 60 to 0)
+  const totalSecondsRemaining = mins * 60 + secs;
+  const angle = ((360 * (totalSecondsRemaining / 3600)) - 90) * Math.PI / 180;
+  const mx = centerX + 65 * Math.cos(angle);
+  const my = centerY + 65 * Math.sin(angle);
   ctx.beginPath();
   ctx.moveTo(centerX, centerY);
   ctx.lineTo(mx, my);
-  ctx.strokeStyle = "#444";
+  ctx.strokeStyle = "#222";
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Second hand
+  // Second hand (sweeps every second)
   const secondAngle = ((secs * 6) - 90) * Math.PI / 180;
   const sx = centerX + 85 * Math.cos(secondAngle);
   const sy = centerY + 85 * Math.sin(secondAngle);
@@ -309,7 +312,7 @@ function drawAnalogCountdown(mins, secs) {
   // Center cap
   ctx.beginPath();
   ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
-  ctx.fillStyle = "#222";
+  ctx.fillStyle = "#444";
   ctx.fill();
 }
 
