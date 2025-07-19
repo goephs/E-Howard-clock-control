@@ -250,7 +250,7 @@ function drawAnalogCountdown(mins, secs) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Outer bezel
+  // Outer dial
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
   ctx.strokeStyle = "#333";
@@ -264,13 +264,13 @@ function drawAnalogCountdown(mins, secs) {
   ctx.textBaseline = "middle";
   for (let i = 0; i < 12; i++) {
     const label = 60 - i * 5;
-    const angle = ((90 - i * 30) * Math.PI) / 180; // CCW
+    const angle = ((90 - i * 30) * Math.PI) / 180; // CCW layout
     const x = centerX + 75 * Math.cos(angle);
     const y = centerY + 75 * Math.sin(angle);
     ctx.fillText(label.toString(), x, y);
   }
 
-  // Tick marks (counterclockwise)
+  // Tick marks
   for (let i = 0; i < 60; i++) {
     const angle = ((90 - i * 6) * Math.PI) / 180;
     const inner = radius - (i % 5 === 0 ? 10 : 5);
@@ -286,23 +286,21 @@ function drawAnalogCountdown(mins, secs) {
     ctx.stroke();
   }
 
-  // Minute hand (only updates when secs === 0)
-  if (secs === 0) {
-    const angle = ((90 - mins * 6) * Math.PI) / 180;
-    const mx = centerX + 65 * Math.cos(angle);
-    const my = centerY + 65 * Math.sin(angle);
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(mx, my);
-    ctx.strokeStyle = "#222";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-  }
+  // 🕰️ Minute hand (reflects remaining time from 60 to 0)
+  const angle = ((90 - mins * 6) * Math.PI) / 180;
+  const mx = centerX + 65 * Math.cos(angle);
+  const my = centerY + 65 * Math.sin(angle);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(mx, my);
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 4;
+  ctx.stroke();
 
-  // Second hand sweep — with Mondaine pause simulation
+  // ⏱️ Second hand with Swiss-style pause
   let drawSecs = secs;
   if (secs === 59 || secs === 0) {
-    drawSecs = 60; // pause at top
+    drawSecs = 60; // simulate Mondaine pause at top
   }
   const secondAngle = ((drawSecs * 6 - 90) * Math.PI) / 180;
   const sx = centerX + 85 * Math.cos(secondAngle);
@@ -316,7 +314,7 @@ function drawAnalogCountdown(mins, secs) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Red dot at tip
+  // 🟥 Red dot at tip
   ctx.beginPath();
   ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
   ctx.fillStyle = "red";
