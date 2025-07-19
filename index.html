@@ -288,7 +288,6 @@ function drawAnalogCountdown(mins, secs) {
   }
 
 // Minute hand (countdown rotation: counterclockwise from 60 to 0)
-const countdownMinutes = 60 - mins;
 const minuteAngle = ((-mins * 6 + 270) * Math.PI) / 180;
 const mx = centerX + 65 * Math.cos(minuteAngle);
 const my = centerY + 65 * Math.sin(minuteAngle);
