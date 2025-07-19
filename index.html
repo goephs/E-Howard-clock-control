@@ -138,64 +138,24 @@
 
     // Button Actions
 
-function sendMinPlus() {
-  if (countdownActive) {
-    cancelCountdown();
-    feedbackDiv.textContent = '⏹️ Wait Time Interrupted';
-    setTimeout(() => {
-      feedbackDiv.textContent = 'Minute Plus triggered during countdown';
+  function sendMinPlus() {
+    if (countdownActive) {
+      cancelCountdown();
+      feedbackDiv.textContent = 'Wait Time Interrupted';
       setTimeout(() => {
-        feedbackDiv.textContent = '';
-      }, 2000);
-    }, 1500);
-  } else {
-    feedbackDiv.textContent = 'Minute Plus in progress…';
-    client.publish('ehoward-clock/control/minPlus', '1');
-
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.getElementById('progressContainer');
-    const countdownLabel = document.getElementById('countdownLabel');
-    const cancelButton = document.getElementById('cancelButton');
-
-    progressContainer.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressBar.style.backgroundColor = 'green';
-    countdownLabel.textContent = 'Minute Plus in progress…';
-    cancelButton.style.display = 'none';
-
-    // Animate progress bar to 100% over 37.2 seconds
-    let elapsed = 0;
-    const total = 37.2;
-    const interval = 1000;
-
-    const minPlusInterval = setInterval(() => {
-      elapsed += interval / 1000;
-      const percent = (elapsed / total) * 100;
-      progressBar.style.width = `${Math.min(percent, 100)}%`;
-
-      if (percent < 50) {
-        progressBar.style.backgroundColor = 'green';
-      } else if (percent < 80) {
-        progressBar.style.backgroundColor = 'orange';
-      } else {
-        progressBar.style.backgroundColor = 'red';
-      }
-
-      if (elapsed >= total) {
-        clearInterval(minPlusInterval);
-        progressBar.style.width = '0%';
-        progressBar.style.backgroundColor = 'green';
-        countdownLabel.textContent = '';
-        progressContainer.style.display = 'none';
-
-        feedbackDiv.textContent = '✅ Minute Plus Completed';
+        feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
         setTimeout(() => {
           feedbackDiv.textContent = '';
         }, 2000);
-      }
-    }, interval);
+      }, 1500);
+    } else {
+      client.publish('ehoward-clock/control/minPlus', '1');
+      feedbackDiv.textContent = 'Clock Ticked Forward 1 minute';
+      setTimeout(() => {
+        feedbackDiv.textContent = '';
+      }, 2000);
+    }
   }
-}
 
   function sendMinMinus() {
     if (!countdownActive) {
@@ -208,25 +168,60 @@ function sendMinPlus() {
 function sendHourPlus() {
   if (countdownActive) {
     cancelCountdown();
-    feedbackDiv.textContent = '⏹️ Wait Time Interrupted';
+    feedbackDiv.textContent = 'Wait Time Interrupted';
     setTimeout(() => {
-      feedbackDiv.textContent = '🕐 Hour Plus Sent';
+      feedbackDiv.textContent = 'Hour Plus triggered during countdown';
       setTimeout(() => {
         feedbackDiv.textContent = '';
       }, 2000);
     }, 1500);
   } else {
-    feedbackDiv.textContent = '🕐 Hour Plus in Progress';
+    feedbackDiv.textContent = 'Hour Plus in progress…';
     client.publish('ehoward-clock/control/hourPlus', '1');
 
-    setTimeout(() => {
-      feedbackDiv.textContent = '✅ Hour Plus Completed';
-      setTimeout(() => {
-        feedbackDiv.textContent = '';
-      }, 2000);
-    }, 30000); // Adjust this if you want a longer simulation
-               // each fwd tick is 600 ms so it will do 60 ticks
-               // in 37.2 seconds.  Stop the progress text in 30s
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+    const countdownLabel = document.getElementById('countdownLabel');
+    const cancelButton = document.getElementById('cancelButton');
+
+    progressContainer.style.display = 'block';
+    cancelButton.style.display = 'none'; // no cancel
+    countdownLabel.textContent = 'Moving clock forward 1 hour…';
+
+    let elapsed = 0;
+    const total = 37.2; // seconds
+    const interval = 1000;
+
+    progressBar.style.width = '0%';
+    progressBar.style.backgroundColor = 'green';
+
+    const hourPlusInterval = setInterval(() => {
+      elapsed += interval / 1000;
+      const percent = (elapsed / total) * 100;
+      progressBar.style.width = `${Math.min(percent, 100)}%`;
+
+      // Color shift
+      if (percent < 50) {
+        progressBar.style.backgroundColor = 'green';
+      } else if (percent < 80) {
+        progressBar.style.backgroundColor = 'orange';
+      } else {
+        progressBar.style.backgroundColor = 'red';
+      }
+
+      if (elapsed >= total) {
+        clearInterval(hourPlusInterval);
+        progressBar.style.width = '0%';
+        progressBar.style.backgroundColor = 'green';
+        progressContainer.style.display = 'none';
+        countdownLabel.textContent = '';
+
+        feedbackDiv.textContent = 'Hour Plus Completed';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+        }, 2000);
+      }
+    }, interval);
   }
 }
 
